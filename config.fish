@@ -114,3 +114,43 @@ function fish_user_key_bindings
     bind -M char_select_full \e 'set -g fish_bind_mode insert; commandline -f repaint'
     bind -M num_select_full \e 'set -g fish_bind_mode insert; commandline -f repaint'
 end
+
+# Set fish prompt to look like the following (w/ colors) [I] ❯ 257 ❯❯ ✔ ❯ luketych:config-fish/config-fish >
+function fish_prompt
+    # Capture exit status before anything else
+    set -l last_status $status
+
+    set -l status_symbol "$status_symbol"
+
+    # Set the checkmark (✔) or cross (✘) with colors
+    if test $last_status -eq 0
+        set status_symbol (string join '' (set_color green) (echo "✔") (set_color normal))  # ✔ Green
+    else
+        set status_symbol (string join '' (set_color red) (echo "✘") (set_color normal))  # ✘ Red
+    end
+
+    
+
+    # Vi mode indicator (Insert [I], Normal [N])
+    set -l mode (string replace insert '[I]' (string replace normal '[N]' (string replace replace '[R]' $fish_bind_mode)))
+
+    # Command history count (Orange / Magenta)
+    set -l cmd_count (math (history | wc -l))
+    set -l cmd_count_colored (set_color brmagenta; echo -n $cmd_count; set_color normal)
+
+    # Get username and hostname
+    set -l user (whoami)
+    set -l host (hostname | cut -d . -f1)  # Short hostname
+
+    # Show last two directories in path
+    set -l path (string join "/" (string split "/" (pwd) | tail -n 2))
+
+    echo $status_symbol
+    echo $last_status
+
+    echo -n "$mode ❯ $cmd_count_colored ❯❯ $status_symbol ❯ "  
+    echo -n (set_color cyan)"$user"(set_color normal)
+    echo -n ":"
+    echo -n (set_color yellow)"$path"(set_color normal)
+    echo -n " > "
+end
